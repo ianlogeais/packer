@@ -1,0 +1,54 @@
+{
+  "variables": {
+      "vm_name": "debian-12.11.0-amd64-nginx2",
+      "numvcpus": "1",
+      "memsize": "1024",
+      "disk_size": "40960",
+      "iso_url": "C:/Users/Ian/Downloads/packer-Debian12/debian-12.11.0-amd64-DVD-1.iso",
+      "iso_checksum": "be966aa53a436b3cfb96446d000e6c145a188e6df3dede4e2741161423aa4221",
+      "ssh_username" : "packer",
+      "ssh_password" : "packer",
+      "boot_wait": "5s"
+    },
+"builders": [
+  {
+    "type": "virtualbox-iso",
+    "vm_name": "{{ user `vm_name` }}",
+    "output_directory": "output/{{ user `vm_name` }}",
+    "boot_command": ["<esc> auto preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg<enter>"],
+    "boot_wait": "{{ user `boot_wait` }}",
+    "disk_size": "{{ user `disk_size` }}",
+    "headless": false,
+    "guest_os_type": "Debian_64",
+    "http_directory": "http",
+    "http_port_min": 9001,
+    "http_port_max": 9100,
+    "iso_checksum": "{{ user `iso_checksum` }}",
+    "iso_url": "{{ user `iso_url` }}",
+    "shutdown_command": "echo 'packer'|sudo -S shutdown -P now",
+    "ssh_password": "{{ user `ssh_password` }}",
+    "ssh_port": 22,
+    "ssh_username": "{{ user `ssh_username` }}",
+    "ssh_timeout": "30m",
+    "vboxmanage": [
+      ["modifyvm", "{{.Name}}", "--memory", "{{ user `memsize` }}"],
+      ["modifyvm", "{{.Name}}", "--cpus", "{{ user `numvcpus` }}"],
+      ["modifyvm", "{{.Name}}", "--vram", "32"]
+    ]
+  }
+],
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command": "echo 'packer'|{{.Vars}} sudo -S -E bash '{{.Path}}'",
+      "inline": [
+        "apt -y update && apt -y upgrade",
+        "apt -y install fail2ban",
+        "apt install nginx -y"
+      ]
+    }
+  ]
+}
+
+
+
